@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      String   @default("WORKER") // WORKER | EMPLOYER | ADMIN
+  avatar    String?
+  bio       String?
+  balance   Float    @default(0)
+  rating    Float    @default(5.0)
+  level     String   @default("BRONZE") // BRONZE | SILVER | GOLD | DIAMOND
+  points    Int      @default(0)
+  isVerified Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company            Company?
+  jobs               Job[]
+  appliedJobs        JobApplication[]
+  sentMessages       Message[]         @relation("MessageSender")
+  receivedMessages   Message[]         @relation("MessageReceiver")
+  sessionsAsUser     ChatSession[]     @relation("ChatSessionUser")
+  sessionsAsEmployer ChatSession[]     @relation("ChatSessionEmployer")
+  transactions       Transaction[]
+  insurances         Insurance[]
+  reviewsGiven       Review[]          @relation("ReviewReviewer")
+  reviewsReceived    Review[]          @relation("ReviewTarget")
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  logo        String?
+  description String?
+  industry    String?
+  scale       String?
+  address     String?
+  license     String?
+  level       String   @default("B") // B | A | S
+  isVerified  Boolean  @default(false)
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  jobs Job[]
+}
+
+model Job {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    String
+  salary      String
+  salaryType  String   @default("DAILY")
+  location    String
+  address     String
+  latitude    Float?
+  longitude   Float?
+  startDate   DateTime
+  endDate     DateTime?
+  workHours   String
+  headCount   Int      @default(1)
+  hiredCount  Int      @default(0)
+  status      String   @default("OPEN") // OPEN | CLOSED | FILLED
+  requirements String?
+  benefits    String?
+  isInsured   Boolean  @default(false)
+  tags        String   @default("")
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employerId  String
+  employer    User      @relation(fields: [employerId], references: [id])
+  companyId   String?
+  company     Company?  @relation(fields: [companyId], references: [id])
+  applications JobApplication[]
+  chatSessions ChatSession[]
+  transactions Transaction[]
+  insurances  Insurance[]
+  reviews     Review[]
+}
+
+model JobApplication {
+  id        String   @id @default(uuid())
+  status    String   @default("PENDING") // PENDING | ACCEPTED | REJECTED | COMPLETED
+  message   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobId   String
+  job     Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  workerId String
+  worker  User   @relation(fields: [workerId], references: [id])
+}
+
+model ChatSession {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobId       String?
+  job         Job?   @relation(fields: [jobId], references: [id])
+  userId      String
+  user        User   @relation("ChatSessionUser", fields: [userId], references: [id])
+  employerId  String
+  employer    User   @relation("ChatSessionEmployer", fields: [employerId], references: [id])
+  messages    Message[]
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  sessionId  String
+  session    ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User   @relation("MessageSender", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User   @relation("MessageReceiver", fields: [receiverId], references: [id])
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  amount      Float
+  type        String   // DEPOSIT | WITHDRAWAL | PAYMENT | REFUND | GURANTEE
+  status      String   @default("PENDING") // PENDING | COMPLETED | FAILED
+  description String?
+  createdAt   DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  jobId  String?
+  job    Job?   @relation(fields: [jobId], references: [id])
+}
+
+model Insurance {
+  id        String   @id @default(uuid())
+  type      String   // ACCIDENT | LIABILITY | HEALTH
+  status    String   @default("ACTIVE") // ACTIVE | EXPIRED | CLAIMED
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime @default(now())
+
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id])
+  userId String
+  user  User   @relation(fields: [userId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int      // 1-5
+  content   String?
+  createdAt DateTime @default(now())
+
+  jobId       String
+  job         Job    @relation(fields: [jobId], references: [id])
+  reviewerId  String
+  reviewer    User   @relation("ReviewReviewer", fields: [reviewerId], references: [id])
+  targetId    String
+  target      User   @relation("ReviewTarget", fields: [targetId], references: [id])
+}
