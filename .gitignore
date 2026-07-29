@@ -4,3 +4,10 @@ dist/
 *.db
 *.db-journal
 .DS_Store
+.vercel
+*.exe
+cf_err*.txt
+cf_out*.txt
+tunnel_url.txt
+server/server.log
+*.log

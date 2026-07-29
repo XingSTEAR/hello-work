@@ -1,9 +1,14 @@
 import axios from 'axios'
 
+// 后端 API 地址：可通过环境变量 VITE_API_BASE_URL 配置
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    // localtunnel 需要绕过提醒页面
+    'Bypass-Tunnel-Reminder': 'true',
   },
 })
 

@@ -38,8 +38,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     const token = localStorage.getItem('token')
     if (!token) return
 
-    // 开发环境连本地后端，生产环境连同源（前后端在同一服务器）
-    const socketUrl = import.meta.env.PROD ? window.location.origin : 'http://localhost:3001'
+    // 开发环境连本地后端，生产环境使用环境变量配置的后端地址
+    const socketUrl = import.meta.env.PROD 
+      ? (import.meta.env.VITE_API_BASE_URL_ORIGIN || window.location.origin)
+      : 'http://localhost:3001'
     const newSocket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],

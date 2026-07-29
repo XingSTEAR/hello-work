@@ -12,6 +12,7 @@
     "db:seed": "cd server && npx prisma db seed"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "localtunnel": "^2.0.2"
   }
 }
